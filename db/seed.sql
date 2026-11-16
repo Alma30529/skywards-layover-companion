@@ -12,3 +12,6 @@ INSERT INTO skywards_records (skywards_number, tier, points_balance) VALUES
   ('EK 0000 0008', 'Platinum', 5600),
   ('EK 0000 0009', 'Blue',      150),
   ('EK 0000 0010', 'Silver',    900);
+
+-- Admin account (demo only)
+INSERT INTO users (name, email, password_hash, role) VALUES ('Admin', 'admin@skywards.test', '$2b$10$F13jzaoJdgDFLmidLZpoSe5BXMW1O.sY3MZxvMnRzkaoezjgdLM7K', 'admin');
