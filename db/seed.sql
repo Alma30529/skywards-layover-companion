@@ -41,3 +41,18 @@ INSERT INTO activities (name, description, category, price_aed, duration_min, tr
   ('Deira Shawarma and Karak Walk', 'Quick street-food walk ending with karak tea.', 'food', 45, 60, 30, 'landside', FALSE, 25.2711, 55.3081),
   ('Airside Arabic Mezze Tasting', 'Mezze platter tasting at a terminal restaurant.', 'food', 60, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
   ('Lounge Gourmet Brunch', 'Premium lounge brunch with chef stations.', 'food', 250, 90, 0, 'airside', TRUE, 25.2532, 55.3657);
+
+-- Activities part 2: shopping and relaxation
+INSERT INTO activities (name, description, category, price_aed, duration_min, travel_min_one_way, zone, is_premium, latitude, longitude) VALUES
+  ('Dubai Mall Highlights', 'Browse the world''s largest mall and its waterfall and aquarium views.', 'shopping', 40, 150, 30, 'landside', FALSE, 25.1985, 55.2796),
+  ('Gold Souk Shopping Trip', 'Guided shopping and bargaining tips in the Deira gold souk.', 'shopping', 50, 90, 30, 'landside', FALSE, 25.2869, 55.2976),
+  ('Dubai Festival City Mall Quick Stop', 'Nearby mall visit with easy shopping and a food court.', 'shopping', 20, 75, 20, 'landside', FALSE, 25.2220, 55.3550),
+  ('Mall of the Emirates Shopping', 'Shopping and the indoor ski slope viewing area.', 'shopping', 35, 120, 40, 'landside', FALSE, 25.1181, 55.2008),
+  ('Personal Shopper at Dubai Mall', 'Private shopper and VIP lounge access at the mall.', 'shopping', 500, 150, 30, 'landside', TRUE, 25.1985, 55.2796),
+  ('Airside Duty Free Browse', 'Time to browse the terminal duty free shops.', 'shopping', 0, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
+  ('Kite Beach Relaxation', 'Sit on the beach with views of the skyline.', 'relaxation', 30, 120, 40, 'landside', FALSE, 25.1500, 55.1930),
+  ('Creekside Park Stroll', 'Walk and relax in Creekside Park with a cable car ride.', 'relaxation', 35, 90, 25, 'landside', FALSE, 25.2250, 55.3360),
+  ('Airside Quiet Room and Shower', 'Freshen up with a shower and a rest in the quiet area.', 'relaxation', 60, 60, 0, 'airside', FALSE, 25.2532, 55.3657),
+  ('Airport Spa Massage', 'Short massage at the terminal spa.', 'relaxation', 150, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
+  ('Premium Lounge Spa and Rest', 'Premium lounge with spa treatment and sleep pods.', 'relaxation', 300, 120, 0, 'airside', TRUE, 25.2532, 55.3657),
+  ('Private Beach Cabana', 'Private cabana at a Jumeirah beach resort, with towels and drinks.', 'relaxation', 600, 180, 40, 'landside', TRUE, 25.1412, 55.1853);
