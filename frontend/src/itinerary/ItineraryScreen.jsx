@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { activities } from "./dummyActivities.js";
+import { seedActivities } from "./seedActivities.js";
 import {
   getActivityList,
   hasNoMatch,
@@ -12,6 +12,7 @@ import {
   getBackAtGateTime,
   formatTime,
   formatMinutes,
+  parseFlightTime,
 } from "./itineraryLogic.js";
 
 const allCategories = ["culture", "food", "shopping", "relaxation"];
@@ -19,7 +20,8 @@ const allCategories = ["culture", "food", "shopping", "relaxation"];
 function ItineraryScreen({
   usableTime = 320,
   cabin = "Economy",
-  departureTime = new Date(2026, 10, 20, 13, 45),
+  departureTime = "2026-12-01 13:45",
+  activities = seedActivities,
   onProceed,
 }) {
   const [categories, setCategories] = useState([]);
@@ -34,7 +36,7 @@ function ItineraryScreen({
   const tooShort = usableTime < 60;
   const timeUsed = getTimeUsed(itinerary);
   const percent = tooShort ? 0 : Math.min(100, (timeUsed / usableTime) * 100);
-  const backAtGate = formatTime(getBackAtGateTime(departureTime));
+  const backAtGate = formatTime(getBackAtGateTime(parseFlightTime(departureTime)));
 
   function toggleCategory(category) {
     if (categories.includes(category)) {
@@ -149,10 +151,10 @@ function ItineraryScreen({
                         <span className="rounded border px-2 py-0.5">{activity.zone}</span>
                       </p>
                       <p className="mt-1 text-sm">
-                        {formatMinutes(activity.duration)}, {activity.price === 0 ? "Free" : "AED " + activity.price}
+                        {formatMinutes(activity.duration_min)}, {activity.price_aed === 0 ? "Free" : "AED " + activity.price_aed}
                       </p>
-                      {activity.travelTime > 0 && (
-                        <p className="text-xs">Travel: {formatMinutes(2 * activity.travelTime)} there and back</p>
+                      {activity.travel_min_one_way > 0 && (
+                        <p className="text-xs">Travel: {formatMinutes(2 * activity.travel_min_one_way)} there and back</p>
                       )}
                       {greyedOut && <p className="mt-1 text-sm">Doesn't fit remaining time.</p>}
                     </div>

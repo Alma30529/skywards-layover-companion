@@ -15,6 +15,8 @@ import {
   removeActivity,
   getBackAtGateTime,
   formatTime,
+  formatMinutes,
+  parseFlightTime,
 } from "./itineraryLogic.js";
 
 function getIds(list) {
@@ -213,18 +215,54 @@ test("TC32 empty itinerary uses no time", () => {
 // be back at gate
 
 test("TC33 be back at gate is 90 minutes before departure", () => {
-  const departure = new Date(2026, 10, 20, 13, 45);
+  const departure = new Date(Date.UTC(2026, 10, 20, 13, 45));
   assert.strictEqual(formatTime(getBackAtGateTime(departure)), "12:15");
 });
 
 test("TC34 be back at gate works when departure is after midnight", () => {
-  const departure = new Date(2026, 10, 21, 0, 30);
+  const departure = new Date(Date.UTC(2026, 10, 21, 0, 30));
   const result = getBackAtGateTime(departure);
   assert.strictEqual(formatTime(result), "23:00");
-  assert.strictEqual(result.getDate(), 20);
+  assert.strictEqual(result.getUTCDate(), 20);
 });
 
 test("TC35 times under 10 are shown with a leading zero", () => {
-  const departure = new Date(2026, 10, 20, 9, 5);
+  const departure = new Date(Date.UTC(2026, 10, 20, 9, 5));
   assert.strictEqual(formatTime(getBackAtGateTime(departure)), "07:35");
+});
+
+// showing minutes
+
+test("TC36 minutes are shown as hours and minutes", () => {
+  assert.strictEqual(formatMinutes(320), "5h 20m");
+});
+
+test("TC37 under an hour is shown as minutes only", () => {
+  assert.strictEqual(formatMinutes(45), "45m");
+});
+
+test("TC38 whole hours are shown without minutes", () => {
+  assert.strictEqual(formatMinutes(120), "2h");
+});
+
+test("TC39 negative time is shown as 0m", () => {
+  assert.strictEqual(formatMinutes(-10), "0m");
+});
+
+// flight time text from the database
+
+test("TC40 flight time text gives the right gate time", () => {
+  const departure = parseFlightTime("2026-12-01 13:45");
+  assert.strictEqual(formatTime(getBackAtGateTime(departure)), "12:15");
+});
+
+test("TC41 flight time with a Z at the end is read as written", () => {
+  const departure = parseFlightTime("2026-12-01T13:45:00.000Z");
+  assert.strictEqual(formatTime(getBackAtGateTime(departure)), "12:15");
+});
+
+test("TC42 flight time just after midnight gives the day before", () => {
+  const result = getBackAtGateTime(parseFlightTime("2026-12-01 00:30"));
+  assert.strictEqual(formatTime(result), "23:00");
+  assert.strictEqual(result.getUTCDate(), 30);
 });
