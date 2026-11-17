@@ -2,7 +2,7 @@ const DEPARTURE_BUFFER = 90;
 
 // total time an activity takes: the activity itself + travel to and from DXB
 export function getActivityTime(activity) {
-  return activity.duration + 2 * activity.travelTime;
+  return activity.duration_min + 2 * activity.travel_min_one_way;
 }
 
 // FR3.1: keep only the chosen categories
@@ -31,13 +31,13 @@ export function sortByCabin(activities, cabin) {
 
   if (cabin === "Business" || cabin === "First") {
     sorted.sort((a, b) => {
-      if (a.isPremium !== b.isPremium) {
-        return a.isPremium ? -1 : 1;
+      if (a.is_premium !== b.is_premium) {
+        return a.is_premium ? -1 : 1;
       }
-      return a.price - b.price;
+      return a.price_aed - b.price_aed;
     });
   } else {
-    sorted.sort((a, b) => a.price - b.price);
+    sorted.sort((a, b) => a.price_aed - b.price_aed);
   }
 
   return sorted;
@@ -95,8 +95,36 @@ export function getBackAtGateTime(departureTime) {
   return new Date(departureTime.getTime() - DEPARTURE_BUFFER * 60 * 1000);
 }
 
+// flight times are text like "2026-12-01 13:45" (Dubai local time)
+// the time is read exactly as written so the browser's time zone cannot change it
+export function parseFlightTime(text) {
+  const year = Number(text.slice(0, 4));
+  const month = Number(text.slice(5, 7)) - 1;
+  const day = Number(text.slice(8, 10));
+  const hours = Number(text.slice(11, 13));
+  const minutes = Number(text.slice(14, 16));
+  return new Date(Date.UTC(year, month, day, hours, minutes));
+}
+
 export function formatTime(date) {
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   return hours + ":" + minutes;
+}
+
+// shows minutes as 5h 20m, 45m or 2h
+export function formatMinutes(minutes) {
+  if (minutes < 0) {
+    minutes = 0;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours === 0) {
+    return mins + "m";
+  }
+  if (mins === 0) {
+    return hours + "h";
+  }
+  return hours + "h " + mins + "m";
 }
