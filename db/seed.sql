@@ -1,5 +1,8 @@
 -- Seed data (mock only). Run after schema.sql.
 
+-- Makes this file safe to re-run: wipes all tables first (demo/dev only)
+TRUNCATE points_ledger, bookings, connections, password_reset_tokens, users, flights, activities, skywards_records RESTART IDENTITY CASCADE;
+
 -- Mock Skywards records (balance is the starting points)
 INSERT INTO skywards_records (skywards_number, tier, points_balance) VALUES
   ('EK 0000 0001', 'Silver',   1200),
@@ -31,7 +34,7 @@ INSERT INTO flights (flight_no, direction, other_airport, scheduled_time) VALUES
 INSERT INTO activities (name, description, category, price_aed, duration_min, travel_min_one_way, zone, is_premium, latitude, longitude) VALUES
   ('Old Dubai Souks Walk', 'Guided walk through the spice and gold souks, with a creek crossing by abra.', 'culture', 120, 150, 40, 'landside', FALSE, 25.2697, 55.2972),
   ('Dubai Museum at Al Fahidi Fort', 'Self-guided visit to the city''s oldest standing building.', 'culture', 25, 90, 35, 'landside', FALSE, 25.2635, 55.2972),
-  ('Al Fahidi Historical District Tour', 'Guided stroll through wind-tower houses and art galleries.', 'culture', 80, 120, 35, 'landside', FALSE, 25.2637, 55.2989),
+  ('Al Fahidi Heritage Tour', 'Guided stroll through wind-tower houses and art galleries.', 'culture', 80, 120, 35, 'landside', FALSE, 25.2637, 55.2989),
   ('Jumeirah Mosque Guided Visit', 'Guided tour with an introduction to local culture and customs.', 'culture', 30, 75, 25, 'landside', FALSE, 25.2337, 55.2653),
   ('Private Burj Khalifa Sky Experience', 'Premium observation deck visit with lounge access and a private host.', 'culture', 450, 120, 30, 'landside', TRUE, 25.1972, 55.2744),
   ('Airport Art and Heritage Walk', 'Short guided walk past the art installations in the terminal.', 'culture', 20, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
@@ -52,7 +55,19 @@ INSERT INTO activities (name, description, category, price_aed, duration_min, tr
   ('Airside Duty Free Browse', 'Time to browse the terminal duty free shops.', 'shopping', 0, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
   ('Kite Beach Relaxation', 'Sit on the beach with views of the skyline.', 'relaxation', 30, 120, 40, 'landside', FALSE, 25.1500, 55.1930),
   ('Creekside Park Stroll', 'Walk and relax in Creekside Park with a cable car ride.', 'relaxation', 35, 90, 25, 'landside', FALSE, 25.2250, 55.3360),
-  ('Airside Quiet Room and Shower', 'Freshen up with a shower and a rest in the quiet area.', 'relaxation', 60, 60, 0, 'airside', FALSE, 25.2532, 55.3657),
+  ('Spa and Shower Suite', 'Freshen up with a shower and a rest in the quiet area.', 'relaxation', 60, 60, 0, 'airside', FALSE, 25.2532, 55.3657),
   ('Airport Spa Massage', 'Short massage at the terminal spa.', 'relaxation', 150, 45, 0, 'airside', FALSE, 25.2532, 55.3657),
-  ('Premium Lounge Spa and Rest', 'Premium lounge with spa treatment and sleep pods.', 'relaxation', 300, 120, 0, 'airside', TRUE, 25.2532, 55.3657),
+  ('Premium Lounge Access', 'Premium lounge with spa treatment and sleep pods.', 'relaxation', 300, 120, 0, 'airside', TRUE, 25.2532, 55.3657),
   ('Private Beach Cabana', 'Private cabana at a Jumeirah beach resort, with towels and drinks.', 'relaxation', 600, 180, 40, 'landside', TRUE, 25.1412, 55.1853);
+
+-- Extra flights for boundary test cases
+INSERT INTO flights (flight_no, direction, other_airport, scheduled_time) VALUES
+  ('EK501', 'inbound',  'Frankfurt (FRA)', '2026-12-01 08:00'),
+  ('EK232', 'outbound', 'Mumbai (BOM)',    '2026-12-01 12:15'),
+  ('EK070', 'outbound', 'Muscat (MCT)',    '2026-12-01 10:15');
+
+-- Demo passengers (demo only)
+INSERT INTO users (name, email, password_hash, role, skywards_number) VALUES
+  ('Passenger A', 'passenger.a@skywards.test', '$2b$10$v9of4y7OzSs0nd3mbjXg.uqLzz2Sb/fdAspzgfBxTN5aFqWaDH/Aq', 'passenger', 'EK 0000 0001'),
+  ('Passenger B', 'passenger.b@skywards.test', '$2b$10$v9of4y7OzSs0nd3mbjXg.uqLzz2Sb/fdAspzgfBxTN5aFqWaDH/Aq', 'passenger', 'EK 0000 0002'),
+  ('Passenger C', 'passenger.c@skywards.test', '$2b$10$v9of4y7OzSs0nd3mbjXg.uqLzz2Sb/fdAspzgfBxTN5aFqWaDH/Aq', 'passenger', 'EK 0000 0003');
