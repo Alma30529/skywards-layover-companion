@@ -24,7 +24,10 @@ CREATE TABLE password_reset_tokens (
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL,
   expires_at TIMESTAMP NOT NULL,
-  used_at    TIMESTAMP
+  used_at    TIMESTAMP,
+  verified_at TIMESTAMP,
+  reset_token_hash TEXT,
+  attempts   INTEGER NOT NULL DEFAULT 0
 );
 
 -- Seeded mock EK flights
