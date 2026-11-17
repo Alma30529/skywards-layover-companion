@@ -1,14 +1,29 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { requestCode, NETWORK_MESSAGE } from '../api/passwordReset'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
+  const [demoCode, setDemoCode] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSent(true) // fake data: no server call yet
+    setError('')
+    setLoading(true)
+    const r = await requestCode(email.trim())
+    setLoading(false)
+    if (r.ok) {
+      setSent(true)
+      setDemoCode(r.data.demoCode ?? null)
+    } else if (r.status === 0) {
+      setError(NETWORK_MESSAGE)
+    } else {
+      setError(r.data.error || 'Something went wrong. Try again.')
+    }
   }
 
   return (
@@ -30,11 +45,15 @@ export default function ForgotPassword() {
           placeholder="name@email.com"
           className="mt-1 h-11 w-full rounded-lg border border-gray-400 px-3"
         />
+        {error && (
+          <p role="alert" className="mt-3 text-sm font-medium text-red-700">⚠ {error}</p>
+        )}
         <button
           type="submit"
-          className="mt-4 h-11 w-full rounded-lg border border-gray-800 bg-gray-200 font-medium"
+          disabled={loading}
+          className="mt-4 h-11 w-full rounded-lg border border-gray-800 bg-gray-200 font-medium disabled:opacity-50"
         >
-          Send code
+          {loading ? 'Sending…' : 'Send code'}
         </button>
       </form>
 
@@ -43,15 +62,17 @@ export default function ForgotPassword() {
           <p className="rounded-lg border border-gray-800 p-3">
             If that email is registered, a code has been generated.
           </p>
-          <div className="rounded-lg border border-gray-400 bg-gray-100 p-3 text-sm">
-            <p className="text-gray-600">
-              DEMO ONLY: code shown here or logged to the console, not emailed.
-            </p>
-            <p className="mt-1 text-lg font-bold">123456</p>
-            <p className="text-gray-600">Single-use. Expires in 30 minutes.</p>
-          </div>
+          {demoCode && (
+            <div className="rounded-lg border border-gray-400 bg-gray-100 p-3 text-sm">
+              <p className="text-gray-600">
+                DEMO ONLY: code shown here or logged to the console, not emailed.
+              </p>
+              <p className="mt-1 text-lg font-bold">{demoCode}</p>
+              <p className="text-gray-600">Single-use. Expires in 30 minutes.</p>
+            </div>
+          )}
           <button
-            onClick={() => navigate('/enter-code')}
+            onClick={() => navigate('/enter-code', { state: { email: email.trim(), demoCode } })}
             className="h-11 w-full rounded-lg border border-gray-800 font-medium"
           >
             Enter code
