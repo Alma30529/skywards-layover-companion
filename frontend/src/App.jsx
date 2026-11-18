@@ -10,6 +10,8 @@ import AdminHome from './pages/AdminHome'
 import ForgotPassword from './pages/ForgotPassword'
 import EnterCode from './pages/EnterCode'
 import ResetPassword from './pages/ResetPassword'
+import ConnectionSelect from './pages/ConnectionSelect'
+import ItineraryPage from './pages/ItineraryPage'
 
 export default function App() {
   return (
