@@ -3,7 +3,7 @@ const express = require('express')
 const cors = require('cors')
 
 const app = express()
-app.use(cors({ origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',') }))
+app.use(cors({ origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/] }))
 app.use(express.json())
 
 app.get('/health', (req, res) => res.json({ ok: true }))
