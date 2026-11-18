@@ -8,5 +8,6 @@ app.use(express.json())
 
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.use('/auth', require('./routes/PasswordReset')) // each teammate mounts their own router here
+app.use('/layover', require('./routes/layover'))
 
 app.listen(process.env.PORT || 4000, () => console.log('API running'))

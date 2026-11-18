@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import ForgotPassword from './pages/ForgotPassword'
 import EnterCode from './pages/EnterCode'
 import ResetPassword from './pages/ResetPassword'
+import ConnectionSelect from './pages/ConnectionSelect'
+import ItineraryPage from './pages/ItineraryPage'
 
 export default function App() {
   return (
@@ -11,6 +13,8 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/enter-code" element={<EnterCode />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/layover" element={<ConnectionSelect />} />
+        <Route path="/itinerary" element={<ItineraryPage />} />
         <Route path="*" element={<p className="p-6">Skywards Layover Companion</p>} />
       </Routes>
     </BrowserRouter>

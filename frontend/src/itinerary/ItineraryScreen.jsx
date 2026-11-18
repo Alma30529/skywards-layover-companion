@@ -22,9 +22,10 @@ function ItineraryScreen({
   cabin = "Economy",
   departureTime = "2026-12-01 13:45",
   activities = seedActivities,
+  initialCategories = [],
   onProceed,
 }) {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(initialCategories);
   const [itinerary, setItinerary] = useState([]);
   const [airportOnly, setAirportOnly] = useState(false);
 
