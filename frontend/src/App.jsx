@@ -30,6 +30,8 @@ export default function App() {
           {/* Passenger screens: add new passenger routes inside this block */}
           <Route element={<ProtectedRoute roles={['passenger']} />}>
             <Route path="/passenger" element={<PassengerHome />} />
+            <Route path="/layover" element={<ConnectionSelect />} />
+            <Route path="/itinerary" element={<ItineraryPage />} />
           </Route>
 
           {/* Admin screens: add new admin routes inside this block */}

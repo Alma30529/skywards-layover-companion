@@ -1,10 +1,14 @@
 const express = require('express')
 const pool = require('../db')
+const { requireAuth, requireRole } = require('../middleware/auth')
 const { LayoverError } = require('../layover/errors')
 const { normalizeCategories, filterActivities } = require('../layover/categoryFilter')
 const service = require('../layover/connectionService')
 
 const router = express.Router()
+
+// NFR11: every route checks the role. Layover planning is passenger-only.
+router.use(requireAuth, requireRole('passenger'))
 
 const handle = (fn) => async (req, res) => {
   try {
