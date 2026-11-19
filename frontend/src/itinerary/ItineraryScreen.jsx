@@ -29,6 +29,9 @@ function ItineraryScreen({
   const [itinerary, setItinerary] = useState([]);
   const [airportOnly, setAirportOnly] = useState(false);
 
+  // only the interests picked on the layover screen are shown here
+  const categoryChoices = initialCategories.length > 0 ? initialCategories : allCategories;
+
   let list = getActivityList(activities, categories, usableTime, cabin);
   if (airportOnly) {
     list = list.filter((activity) => activity.zone === "airside");
@@ -62,7 +65,7 @@ function ItineraryScreen({
 
   function showAirportOnly() {
     setAirportOnly(true);
-    setCategories(allCategories);
+    setCategories(categoryChoices);
   }
 
   return (
@@ -85,7 +88,7 @@ function ItineraryScreen({
           <h2 className="mt-6 font-semibold">What are you into?</h2>
           <p className="text-sm text-slate-600">Pick one or more.</p>
           <div className="mt-2 grid grid-cols-2">
-            {allCategories.map((category) => (
+            {categoryChoices.map((category) => (
               <label key={category} className="flex min-h-[44px] items-center gap-2 capitalize">
                 <input
                   type="checkbox"
