@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  getFlights,
+  lookupPnr,
   calculateConnection,
   getMatchingActivities,
   NETWORK_MESSAGE,
 } from '../api/layover'
 import { loadLayover, saveLayover } from '../layover/layoverStorage'
 
-const CABINS = ['Economy', 'Business', 'First']
 const CATEGORIES = [
   { id: 'culture', label: 'Culture' },
   { id: 'food', label: 'Food' },
@@ -39,8 +38,10 @@ export default function ConnectionSelect() {
   const navigate = useNavigate()
   const saved = loadLayover()
 
-  const [flights, setFlights] = useState({ inbound: [], outbound: [] })
-  const [loadingFlights, setLoadingFlights] = useState(true)
+  // FR2.1: the passenger enters a PNR and we look up their flights and cabin class
+  const [pnrInput, setPnrInput] = useState('')
+  const [pnr, setPnr] = useState(saved?.pnr ?? '')
+  const [lookingUp, setLookingUp] = useState(false)
   const [inboundId, setInboundId] = useState(saved?.inboundId ?? '')
   const [outboundId, setOutboundId] = useState(saved?.outboundId ?? '')
   const [cabin, setCabin] = useState(saved?.cabin ?? 'Economy')
@@ -50,36 +51,20 @@ export default function ConnectionSelect() {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const [reloadKey, setReloadKey] = useState(0)
+  const hasBooking = Boolean(pnr && inboundId && outboundId)
 
+  // Recalculate when a saved booking is restored after a refresh (FR2.2 to FR2.4 are done by the server).
+  // A fresh PNR lookup already has its result, so it is skipped here.
   useEffect(() => {
-    let cancelled = false
-    getFlights().then((r) => {
-      if (cancelled) return
-      setLoadingFlights(false)
-      if (r.ok) setFlights(r.data)
-      else setError(r.status === 0 ? NETWORK_MESSAGE : r.data.error || 'Could not load flights.')
-    })
-    return () => {
-      cancelled = true
+    if (!hasBooking) return
+    if (
+      result &&
+      String(result.inbound.id) === String(inboundId) &&
+      String(result.outbound.id) === String(outboundId) &&
+      result.cabinClass === cabin
+    ) {
+      return
     }
-  }, [reloadKey])
-
-  function retryFlights() {
-    setError('')
-    setLoadingFlights(true)
-    setReloadKey((k) => k + 1)
-  }
-
-  // FR2.1: only outbound flights that depart after the chosen inbound flight arrives
-  const inbound = flights.inbound.find((f) => String(f.id) === String(inboundId))
-  const outboundOptions = inbound
-    ? flights.outbound.filter((f) => f.scheduled_time > inbound.scheduled_time)
-    : []
-
-  // recalculate whenever the connection changes (FR2.2 to FR2.4 are done by the server)
-  useEffect(() => {
-    if (!inboundId || !outboundId) return
     let cancelled = false
     calculateConnection({
       inboundFlightId: Number(inboundId),
@@ -98,23 +83,44 @@ export default function ConnectionSelect() {
     return () => {
       cancelled = true
     }
-  }, [inboundId, outboundId, cabin])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasBooking, inboundId, outboundId, cabin])
 
   // remember the choices on this device (NFR3)
   useEffect(() => {
-    saveLayover({ ...(loadLayover() || {}), inboundId, outboundId, cabin, categories })
-  }, [inboundId, outboundId, cabin, categories])
+    saveLayover({ ...(loadLayover() || {}), pnr, inboundId, outboundId, cabin, categories })
+  }, [pnr, inboundId, outboundId, cabin, categories])
 
-  function changeInbound(id) {
-    setInboundId(id)
-    setOutboundId('')
-    setResult(null)
+  async function handleLookup(e) {
+    e.preventDefault()
+    const clean = pnrInput.replace(/\s+/g, '').toUpperCase()
+    if (!/^[A-Z0-9]{6}$/.test(clean)) {
+      setError('Enter your 6-character booking reference (PNR).')
+      return
+    }
+    setLookingUp(true)
+    setError('')
     setNotice('')
+    const r = await lookupPnr(clean)
+    setLookingUp(false)
+    if (!r.ok) {
+      setError(r.status === 0 ? NETWORK_MESSAGE : r.data.error || 'Could not find that booking.')
+      return
+    }
+    setPnr(r.data.pnr)
+    setInboundId(r.data.inbound.id)
+    setOutboundId(r.data.outbound.id)
+    setCabin(r.data.cabinClass)
+    setResult(r.data)
   }
 
-  function changeOutbound(id) {
-    setOutboundId(id)
-    if (!id) setResult(null)
+  function changeBooking() {
+    setPnr('')
+    setPnrInput('')
+    setInboundId('')
+    setOutboundId('')
+    setResult(null)
+    setError('')
     setNotice('')
   }
 
@@ -123,7 +129,7 @@ export default function ConnectionSelect() {
     setCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
   }
 
-  const shown = inboundId && outboundId ? result : null
+  const shown = hasBooking ? result : null
   const canContinue = shown?.bookable && categories.length > 0 && !busy
 
   async function handleContinue() {
@@ -151,6 +157,7 @@ export default function ConnectionSelect() {
       return
     }
     saveLayover({
+      pnr,
       inboundId,
       outboundId,
       cabin,
@@ -166,79 +173,76 @@ export default function ConnectionSelect() {
     <main className="mx-auto min-h-screen max-w-md bg-stone-50 px-5 py-6 text-stone-900">
       <h1 className="text-2xl font-bold">Plan your layover</h1>
       <p className="mt-1 text-stone-600">
-        Pick your two flights and we will work out how much time you really have in Dubai.
+        Enter your booking reference and we will work out how much time you really have in Dubai.
       </p>
 
       {error && (
         <div role="alert" className="mt-4 rounded-md border border-red-700 bg-red-50 p-3 text-red-900">
           <p>{error}</p>
-          {flights.inbound.length === 0 && (
-            <button type="button" onClick={retryFlights} className="mt-2 min-h-11 font-semibold underline">
-              Try again
-            </button>
-          )}
         </div>
       )}
 
       <section className="mt-6">
-        <h2 className="text-lg font-semibold">Your flights</h2>
+        <h2 className="text-lg font-semibold">Your booking</h2>
 
-        <label htmlFor="inbound" className="mt-3 block text-sm font-medium">Arriving flight</label>
-        <select
-          id="inbound"
-          className={field}
-          value={inboundId}
-          disabled={loadingFlights}
-          onChange={(e) => changeInbound(e.target.value)}
-        >
-          <option value="">{loadingFlights ? 'Loading flights…' : 'Select your arriving flight'}</option>
-          {flights.inbound.map((f) => (
-            <option key={f.id} value={f.id}>{flightLabel(f)}</option>
-          ))}
-        </select>
-
-        <label htmlFor="outbound" className="mt-4 block text-sm font-medium">Departing flight</label>
-        <select
-          id="outbound"
-          className={field}
-          value={outboundId}
-          disabled={!inboundId}
-          onChange={(e) => changeOutbound(e.target.value)}
-        >
-          <option value="">
-            {inboundId ? 'Select your departing flight' : 'Choose your arriving flight first'}
-          </option>
-          {outboundOptions.map((f) => (
-            <option key={f.id} value={f.id}>{flightLabel(f)}</option>
-          ))}
-        </select>
-        {inboundId && outboundOptions.length === 0 && (
-          <p className="mt-2 text-sm text-stone-600">No departing flights leave after that arrival.</p>
-        )}
-
-        <fieldset className="mt-4">
-          <legend className="text-sm font-medium">Cabin class</legend>
-          <div className="mt-1 grid grid-cols-3 gap-2">
-            {CABINS.map((c) => (
-              <label
-                key={c}
-                className={`flex min-h-11 cursor-pointer items-center justify-center rounded-md border text-base font-medium has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-red-700 ${
-                  cabin === c ? 'border-red-700 bg-red-700 text-white' : 'border-stone-400 bg-white'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="cabin"
-                  value={c}
-                  checked={cabin === c}
-                  onChange={() => setCabin(c)}
-                  className="sr-only"
-                />
-                {c}
-              </label>
-            ))}
+        {!hasBooking ? (
+          <form onSubmit={handleLookup} noValidate>
+            <label htmlFor="pnr" className="mt-3 block text-sm font-medium">Booking reference (PNR)</label>
+            <input
+              id="pnr"
+              type="text"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={10}
+              placeholder="e.g. K7P2QX"
+              className={`${field} uppercase tracking-widest`}
+              value={pnrInput}
+              onChange={(e) => setPnrInput(e.target.value.toUpperCase())}
+              aria-describedby="pnr-help"
+            />
+            <p id="pnr-help" className="mt-1 text-sm text-stone-600">
+              6 letters or numbers, shown on your booking confirmation.
+            </p>
+            <button
+              type="submit"
+              disabled={lookingUp || !pnrInput.trim()}
+              className="mt-4 min-h-12 w-full rounded-md bg-red-700 px-4 text-base font-semibold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-700 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-600"
+            >
+              {lookingUp ? 'Finding your flights…' : 'Find my flights'}
+            </button>
+          </form>
+        ) : (
+          <div className="mt-3 rounded-md border border-stone-300 bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-stone-600">
+                Booking reference <span className="font-semibold tracking-widest text-stone-900">{pnr}</span>
+              </p>
+              <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-semibold">{cabin}</span>
+            </div>
+            {result ? (
+              <dl className="mt-3 space-y-2 text-sm">
+                <div>
+                  <dt className="text-stone-600">Arriving flight</dt>
+                  <dd className="font-semibold">{flightLabel(result.inbound)}</dd>
+                </div>
+                <div>
+                  <dt className="text-stone-600">Departing flight</dt>
+                  <dd className="font-semibold">{flightLabel(result.outbound)}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="mt-3 text-sm text-stone-600">Loading your flights…</p>
+            )}
+            <button
+              type="button"
+              onClick={changeBooking}
+              className="mt-3 min-h-11 text-sm font-semibold text-red-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+            >
+              Use a different booking reference
+            </button>
           </div>
-        </fieldset>
+        )}
       </section>
 
       {shown && (

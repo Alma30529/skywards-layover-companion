@@ -25,6 +25,11 @@ const handle = (fn) => async (req, res) => {
 // GET /layover/flights -> { inbound: [...], outbound: [...] }
 router.get('/flights', handle(() => service.listFlights(pool)))
 
+// POST /layover/pnr  { pnr }
+// -> the connection for that booking reference: inbound, outbound, cabin and the layover result.
+// POST (not GET) so the booking reference stays out of URLs and server logs.
+router.post('/pnr', handle((req) => service.resolveByPnr(pool, (req.body || {}).pnr)))
+
 // POST /layover/calculate  { inboundFlightId, outboundFlightId, cabinClass }
 // -> layover, usable time, state (full | airside_only | caution), message, backAtGate
 router.post('/calculate', handle((req) => service.resolveConnection(pool, req.body || {})))

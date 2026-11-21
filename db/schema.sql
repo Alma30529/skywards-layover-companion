@@ -39,6 +39,15 @@ CREATE TABLE flights (
   scheduled_time TIMESTAMP NOT NULL      -- arrival or departure at DXB
 );
 
+-- Mock airline bookings. One PNR (booking reference) gives the whole connection,
+-- so the passenger types it instead of picking flights and a cabin from lists (FR2.1).
+CREATE TABLE pnr_bookings (
+  pnr                TEXT PRIMARY KEY CHECK (pnr ~ '^[A-Z0-9]{6}$'),
+  inbound_flight_id  INTEGER NOT NULL REFERENCES flights(id),
+  outbound_flight_id INTEGER NOT NULL REFERENCES flights(id),
+  cabin_class        TEXT NOT NULL CHECK (cabin_class IN ('Economy','Business','First'))
+);
+
 -- A passenger's selected connection
 CREATE TABLE connections (
   id                SERIAL PRIMARY KEY,

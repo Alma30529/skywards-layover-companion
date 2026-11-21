@@ -26,5 +26,7 @@ export const NETWORK_MESSAGE =
   "Can't reach the server. Check your connection and try again."
 
 export const getFlights = () => request('/layover/flights')
+// FR2.1: one booking reference (PNR) gives the inbound flight, outbound flight and cabin class
+export const lookupPnr = (pnr) => post('/layover/pnr', { pnr })
 export const calculateConnection = (selection) => post('/layover/calculate', selection)
 export const getMatchingActivities = (selection) => post('/layover/activities', selection)
