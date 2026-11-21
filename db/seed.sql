@@ -1,7 +1,7 @@
 -- Seed data (mock only). Run after schema.sql.
 
 -- Makes this file safe to re-run: wipes all tables first (demo/dev only)
-TRUNCATE points_ledger, bookings, connections, password_reset_tokens, users, flights, activities, skywards_records RESTART IDENTITY CASCADE;
+TRUNCATE points_ledger, bookings, connections, pnr_bookings, password_reset_tokens, users, flights, activities, skywards_records RESTART IDENTITY CASCADE;
 
 -- Mock Skywards records (balance is the starting points)
 INSERT INTO skywards_records (skywards_number, tier, points_balance) VALUES
@@ -65,6 +65,15 @@ INSERT INTO flights (flight_no, direction, other_airport, scheduled_time) VALUES
   ('EK501', 'inbound',  'Frankfurt (FRA)', '2026-12-01 08:00'),
   ('EK232', 'outbound', 'Mumbai (BOM)',    '2026-12-01 12:15'),
   ('EK070', 'outbound', 'Muscat (MCT)',    '2026-12-01 10:15');
+
+-- Mock PNRs (booking references). Each one is a full connection: inbound + outbound + cabin.
+INSERT INTO pnr_bookings (pnr, inbound_flight_id, outbound_flight_id, cabin_class) VALUES
+  ('K7P2QX', (SELECT id FROM flights WHERE flight_no = 'EK203'), (SELECT id FROM flights WHERE flight_no = 'EK150'), 'Economy'),  -- 5h 20m layover: full access
+  ('M3R8TW', (SELECT id FROM flights WHERE flight_no = 'EK607'), (SELECT id FROM flights WHERE flight_no = 'EK412'), 'Business'), -- 6h 15m: full access, premium first
+  ('B9D4LN', (SELECT id FROM flights WHERE flight_no = 'EK311'), (SELECT id FROM flights WHERE flight_no = 'EK570'), 'First'),    -- 13h 15m: long layover
+  ('Z5H6JC', (SELECT id FROM flights WHERE flight_no = 'EK501'), (SELECT id FROM flights WHERE flight_no = 'EK232'), 'Economy'),  -- 4h 15m: exactly 120 usable min (boundary)
+  ('H2N7VD', (SELECT id FROM flights WHERE flight_no = 'EK311'), (SELECT id FROM flights WHERE flight_no = 'EK088'), 'Economy'),  -- 3h 35m: airport-only state
+  ('T4C9WA', (SELECT id FROM flights WHERE flight_no = 'EK607'), (SELECT id FROM flights WHERE flight_no = 'EK070'), 'Economy');  -- 2h 45m: caution, stay near gate
 
 -- Demo passengers (demo only)
 INSERT INTO users (name, email, password_hash, role, skywards_number) VALUES

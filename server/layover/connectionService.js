@@ -1,6 +1,7 @@
 const C = require('./constants')
 const { LayoverError } = require('./errors')
 const { calculateConnection } = require('./layoverCalculator')
+const { normalizePnr, isValidPnr } = require('./pnr')
 
 // to_char keeps the Dubai local time as plain text, so node-postgres never shifts it by time zone
 const FLIGHT_COLS = `id, flight_no, direction, other_airport,
@@ -40,6 +41,29 @@ async function resolveConnection(pool, { inboundFlightId, outboundFlightId, cabi
   return { inbound, outbound, cabinClass, ...result }
 }
 
+// FR2.1 (PNR version): the passenger enters one booking reference and we look up the
+// inbound flight, outbound flight and cabin class. The rest of the flow is unchanged.
+async function resolveByPnr(pool, rawPnr) {
+  const pnr = normalizePnr(rawPnr)
+  if (!isValidPnr(pnr)) {
+    throw new LayoverError('INVALID_PNR', 'Enter your 6-character booking reference (PNR).')
+  }
+  const { rows } = await pool.query(
+    'SELECT pnr, inbound_flight_id, outbound_flight_id, cabin_class FROM pnr_bookings WHERE pnr = $1',
+    [pnr]
+  )
+  if (!rows.length) {
+    throw new LayoverError('PNR_NOT_FOUND', 'We could not find that booking reference. Check it and try again.', 404)
+  }
+  const b = rows[0]
+  const connection = await resolveConnection(pool, {
+    inboundFlightId: b.inbound_flight_id,
+    outboundFlightId: b.outbound_flight_id,
+    cabinClass: b.cabin_class,
+  })
+  return { pnr: b.pnr, ...connection }
+}
+
 async function listActivities(pool) {
   const { rows } = await pool.query(
     `SELECT id, name, description, category, price_aed, duration_min, travel_min_one_way,
@@ -48,4 +72,4 @@ async function listActivities(pool) {
   return rows
 }
 
-module.exports = { listFlights, getFlight, resolveConnection, listActivities }
+module.exports = { listFlights, getFlight, resolveConnection, resolveByPnr, listActivities }
