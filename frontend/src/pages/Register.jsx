@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { NETWORK_MESSAGE } from '../api/auth'
+import { formatSkywards, SKYWARDS_HINT, SKYWARDS_PATTERN } from '../auth/skywardsFormat'
 
 const MIN_LENGTH = 8
 
@@ -77,8 +78,13 @@ export default function Register() {
           id="skywards"
           required
           value={form.skywardsNumber}
-          onChange={set('skywardsNumber')}
+          onChange={(e) => setForm({ ...form, skywardsNumber: formatSkywards(e.target.value) })}
           placeholder="EK 0000 0001"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={12}
+          pattern={SKYWARDS_PATTERN}
+          title={SKYWARDS_HINT}
           className={input}
         />
 
