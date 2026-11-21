@@ -11,6 +11,7 @@ export default function Login() {
   const justRegistered = state?.registered === true
   const [email, setEmail] = useState(state?.email ?? '')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -55,15 +56,26 @@ export default function Login() {
         />
 
         <label htmlFor="password" className="mt-4 block text-sm font-medium">Password</label>
-        <input
-          id="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 h-11 w-full rounded-lg border border-gray-400 px-3"
-        />
+        <div className="relative mt-1">
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-11 w-full rounded-lg border border-gray-400 pl-3 pr-16"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((shown) => !shown)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-0 flex min-h-11 min-w-11 items-center justify-center px-3 text-sm font-medium underline"
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
 
         {error && (
           <p role="alert" className="mt-3 text-sm font-medium text-red-700">⚠ {error}</p>
