@@ -3,7 +3,9 @@ const express = require('express')
 const cors = require('cors')
 
 const app = express()
-app.use(cors({ origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/] }))
+// Local dev origins, plus any origins listed in CORS_ORIGIN (comma-separated), e.g. the Vercel site
+const extraOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean)
+app.use(cors({ origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/, ...extraOrigins] }))
 app.use(express.json())
 
 app.get('/health', (req, res) => res.json({ ok: true }))
